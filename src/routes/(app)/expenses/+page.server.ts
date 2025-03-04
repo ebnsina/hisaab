@@ -2,14 +2,19 @@ import db from '$lib/server/db';
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ url }) => {
+export const load: PageServerLoad = async ({ url, locals }) => {
+	const userId = locals.user?.id;
+	if (!userId) {
+		throw new Error('User not authenticated');
+	}
+
 	const selectedMonth = url.searchParams.get('month');
 	const selectedYear = url.searchParams.get('year');
 	const selectedCategory = url.searchParams.get('category');
 
 	const currentYear = new Date().getFullYear();
 
-	let whereClause = {};
+	let whereClause: any = { userId };
 
 	if (selectedMonth && selectedYear) {
 		const startDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1);
@@ -42,7 +47,11 @@ export const load: PageServerLoad = async ({ url }) => {
 		}
 	});
 
-	const categories = await db.category.findMany();
+	const categories = await db.category.findMany({
+		where: {
+			expenses: { some: { userId } }
+		}
+	});
 
 	const statsYear = selectedYear ? parseInt(selectedYear) : currentYear;
 	const monthlyExpenses = await db.expense.groupBy({
@@ -51,6 +60,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			amount: true
 		},
 		where: {
+			userId,
 			date: {
 				gte: new Date(statsYear, 0, 1),
 				lte: new Date(statsYear, 11, 31)
@@ -74,6 +84,7 @@ export const load: PageServerLoad = async ({ url }) => {
 			amount: true
 		},
 		where: {
+			userId,
 			date: {
 				gte: new Date(currentYear - 4, 0, 1), // Last 5 years
 				lte: new Date(currentYear, 11, 31)
@@ -95,7 +106,6 @@ export const load: PageServerLoad = async ({ url }) => {
 		}))
 		.sort((a, b) => b.year - a.year);
 
-	// Get max amounts for scaling
 	const maxMonthlyAmount = Math.max(...formattedMonthlyData.map((d) => d.amount));
 	const maxYearlyAmount = Math.max(...formattedYearlyData.map((d) => d.amount));
 

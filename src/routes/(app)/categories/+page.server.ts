@@ -2,8 +2,15 @@ import db from '$lib/server/db';
 import { fail, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async () => {
-	const categories = await db.category.findMany();
+export const load: PageServerLoad = async (event) => {
+	const userId = event.locals.user?.id;
+	if (!userId) {
+		throw new Error('User not authenticated');
+	}
+
+	const categories = await db.category.findMany({
+		where: { userId }
+	});
 
 	return { categories };
 };
