@@ -121,14 +121,16 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 
 export const actions: Actions = {
 	create: async (event) => {
+		const userId = event.locals.user?.id;
+		if (!userId) {
+			throw new Error('User not authenticated');
+		}
+
 		const formData = await event.request.formData();
 		const description = formData.get('description') as string;
 		const amount = parseFloat(formData.get('amount') as string);
 		const date = formData.get('date') as string;
 		const categoryId = formData.get('categoryId') as string;
-
-		const userId = event.locals.user?.id;
-		if (!userId) return;
 
 		if (description.trim().length === 0) {
 			return fail(400, { description, missing: true });
@@ -168,6 +170,11 @@ export const actions: Actions = {
 	},
 
 	destroy: async (event) => {
+		const userId = event.locals.user?.id;
+		if (!userId) {
+			throw new Error('User not authenticated');
+		}
+
 		const formData = await event.request.formData();
 		const id = formData.get('id') as string;
 
@@ -177,7 +184,7 @@ export const actions: Actions = {
 
 		try {
 			const category = await db.category.findUnique({
-				where: { id }
+				where: { id, userId }
 			});
 
 			if (!category) {

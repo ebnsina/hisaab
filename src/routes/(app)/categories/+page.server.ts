@@ -17,6 +17,11 @@ export const load: PageServerLoad = async (event) => {
 
 export const actions: Actions = {
 	create: async (event) => {
+		const userId = event.locals.user?.id;
+		if (!userId) {
+			throw new Error('User not authenticated');
+		}
+
 		const formData = await event.request.formData();
 		const name = formData.get('name') as string;
 
@@ -25,19 +30,24 @@ export const actions: Actions = {
 		}
 
 		await db.category.create({
-			data: { name }
+			data: { name, userId }
 		});
 
 		return { success: true };
 	},
 
 	destroy: async (event) => {
+		const userId = event.locals.user?.id;
+		if (!userId) {
+			throw new Error('User not authenticated');
+		}
+
 		const formData = await event.request.formData();
 		const id = formData.get('id') as string;
 
 		try {
 			const category = await db.category.findUnique({
-				where: { id }
+				where: { id, userId }
 			});
 
 			if (!category) {
