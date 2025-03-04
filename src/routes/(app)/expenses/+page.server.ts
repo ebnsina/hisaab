@@ -48,9 +48,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
 	});
 
 	const categories = await db.category.findMany({
-		where: {
-			expenses: { some: { userId } }
-		}
+		where: { userId }
 	});
 
 	const statsYear = selectedYear ? parseInt(selectedYear) : currentYear;
