@@ -10,9 +10,9 @@
 </svelte:head>
 
 <section class="">
-	<div class="grid min-h-screen grid-cols-2 gap-6">
+	<div class="grid min-h-screen grid-cols-1 gap-6 md:grid-cols-2">
 		<div class="bg-slate-100"></div>
-		<div class="flex flex-col justify-center px-40">
+		<div class="flex flex-col justify-center px-10 md:px-40">
 			<h2 class="mb-4 text-lg font-medium">Sign Up</h2>
 
 			<form method="POST" class="space-y-4" use:enhance>
